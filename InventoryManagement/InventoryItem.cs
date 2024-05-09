@@ -2,16 +2,16 @@
 {
     // InventoryItem class
     // This class represents an item in the grocery store inventory. It has properties such as Name, Price, Quantity, and Category.
-    class InventoryItem
+    public class InventoryItem
     {
         // Attributes
         private string name;
         private double price;
         private int quantity;
-        private string category;
+        private Category category;
 
         // Constructor
-        public InventoryItem(string name, double price, int quantity, string category)
+        public InventoryItem(string name, double price, int quantity, Category category)
         {
             // Initialize attributes
             this.name = name;
@@ -28,6 +28,6 @@
         // Getter and setter for the quantity of the item
         public int Quantity { get { return quantity; } set { quantity = value; } }
         // Getter and setter for the category of the item
-        public string Category { get { return category; } set { category = value; } }
+        public Category Category { get { return category; } set { category = value; } }
     }
 }
