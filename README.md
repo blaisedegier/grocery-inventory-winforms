@@ -60,3 +60,7 @@ C# 14, .NET 10 (`net10.0-windows`), Windows Forms. No NuGet packages.
 - Item names are not required to be unique.
 - Windows only, as Windows Forms is.
 - No automated tests.
+
+## Licence
+
+MIT. See [LICENSE](LICENSE).
