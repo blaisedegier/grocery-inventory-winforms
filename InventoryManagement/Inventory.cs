@@ -2,24 +2,21 @@
 
 namespace InventoryManagement
 {
-    // Inventory class
-    // This class represents the grocery store inventory as a collection of InventoryItem objects.
+    // The store's stock, grouped by category, plus a history of additions and a queue of items to reorder.
     public class Inventory
     {
-        // Attributes
-        //This data structure can be used to store the inventory items as key-value pairs.
-        //The keys can represent the item categories, and the values can be a list of InventoryItem objects.
-        private Dictionary<Category, List<InventoryItem>> items;
-        // This data structure can be used to keep track of the history of items added to the inventory.
-        // When an item is added to the inventory, it can be pushed onto the stack. When an item is removed from the inventory, it can be popped from the stack.
-        private Stack<InventoryItem> history;
-        // This data structure can be used to keep track of the items that need to be restocked.
-        // When an item's quantity goes below a certain threshold, it can be added to the queue.
-        private Queue<InventoryItem> restock;
-        // This constant can be used to set the threshold quantity for restocking items.
+        // An item whose quantity is below this is queued for restocking.
         private const int RESTOCK_THRESHOLD = 10;
 
-        // Constructor
+        // Items grouped by category. A category's list is created the first time an item is added to it.
+        private readonly Dictionary<Category, List<InventoryItem>> items;
+
+        // Items in the order they were added, most recent on top. Removed items are taken out.
+        private Stack<InventoryItem> history;
+
+        // Items below RESTOCK_THRESHOLD, in the order they were found to be low. Each item appears at most once.
+        private Queue<InventoryItem> restock;
+
         public Inventory()
         {
             items = new Dictionary<Category, List<InventoryItem>>();
@@ -27,83 +24,84 @@ namespace InventoryManagement
             restock = new Queue<InventoryItem>();
         }
 
-        // AddItem method
-        // This method adds an item to the inventory by taking in an InventoryItem object as a parameter.
+        // Items currently queued for restocking, oldest first.
+        public IReadOnlyCollection<InventoryItem> RestockQueue => restock;
+
+        // Adds an item under its category, records it in the history and checks whether it needs restocking.
         public void AddItem(InventoryItem item)
         {
-            // Check if the category exists in the dictionary
             if (!items.ContainsKey(item.Category))
             {
-                // If the category does not exist, add it to the dictionary
                 items[item.Category] = new List<InventoryItem>();
             }
-            // Add the item to the list of items in the category
             items[item.Category].Add(item);
-            // Push the item onto the history stack
             history.Push(item);
+            CheckRestock(item);
         }
 
-        // RemoveItem method
-        // This method removes an item from the inventory by taking in an InventoryItem object as a parameter.
+        // Removes an item from its category, the history and the restock queue.
         public void RemoveItem(InventoryItem item)
         {
-            // Removes the item from the list of items in the category
-            items[item.Category].Remove(item);
-            // Check if the item is in the history stack
-            if (history.Count > 0 && history.Peek() == item)
+            if (items.TryGetValue(item.Category, out List<InventoryItem>? list))
             {
-                // If the item is in the history stack, pop it from the stack
-                history.Pop();
+                list.Remove(item);
             }
+
+            // Stack and Queue cannot remove from the middle, so rebuild each without the item, keeping the order.
+            history = new Stack<InventoryItem>(history.Where(i => i != item).Reverse());
+            restock = new Queue<InventoryItem>(restock.Where(i => i != item));
         }
 
-        // DisplayInventory method
-        // This method displays the current inventory by item categories.
+        // Builds the text shown on the home screen: items by category, the most recent addition and the restock queue.
         public string DisplayInventory()
         {
-            // Create a StringBuilder to store the display
             StringBuilder display = new StringBuilder();
-            // Loop through the dictionary by category
             foreach (var category in items.Keys)
             {
-                // Display the category
+                if (items[category].Count == 0)
+                {
+                    continue;
+                }
                 display.AppendLine($"Category: {category}");
-                // Loop through the items in the category
                 foreach (var item in items[category])
                 {
-                    // Display the item
-                    display.AppendLine($"Item: {item.Name}\tPrice: R{item.Price}\tQuantity: {item.Quantity}");
+                    display.AppendLine($"Item: {item.Name}\tPrice: R{item.Price:0.00}\tQuantity: {item.Quantity}");
                 }
             }
-            // Return the display as a string
+
+            if (history.Count > 0)
+            {
+                display.AppendLine();
+                display.AppendLine($"Last added: {history.Peek().Name}");
+            }
+
+            if (restock.Count > 0)
+            {
+                display.AppendLine();
+                display.AppendLine($"Restock (quantity below {RESTOCK_THRESHOLD}):");
+                foreach (var item in restock)
+                {
+                    display.AppendLine($"{item.Name}\tQuantity: {item.Quantity}");
+                }
+            }
             return display.ToString();
         }
 
-        // GetItems method
-        // Get the items in the specified category
+        // Returns the items in a category, or an empty list when the category has none.
         public List<InventoryItem> GetItems(Category category)
         {
-            // Check if the category exists in the dictionary
-            if (items.ContainsKey(category))
+            if (items.TryGetValue(category, out List<InventoryItem>? list))
             {
-                // Return the list of items in the category
-                return items[category];
+                return list;
             }
-            // If the category does not exist, return an empty list
-            else
-            {
-                return new List<InventoryItem>();
-            }
+            return new List<InventoryItem>();
         }
 
-        // CheckRestock method
-        // Check if an item needs to be restocked
+        // Queues an item for restocking when its quantity is below the threshold and it is not already queued.
         public void CheckRestock(InventoryItem item)
         {
-            // Check if the item's quantity is below the restock threshold
-            if (item.Quantity < RESTOCK_THRESHOLD)
+            if (item.Quantity < RESTOCK_THRESHOLD && !restock.Contains(item))
             {
-                // If the item's quantity is below the restock threshold, add it to the restock queue
                 restock.Enqueue(item);
             }
         }
