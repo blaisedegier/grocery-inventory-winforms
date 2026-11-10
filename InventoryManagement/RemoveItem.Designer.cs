@@ -38,6 +38,7 @@
             // 
             // cmbCategory
             // 
+            cmbCategory.DropDownStyle = ComboBoxStyle.DropDownList;
             cmbCategory.Font = new Font("Segoe UI", 12F);
             cmbCategory.FormattingEnabled = true;
             cmbCategory.Items.AddRange(new object[] { "Fruits", "Vegetables", "Dairy", "Meat", "Bakery", "Beverages", "Snacks", "Household" });
@@ -45,7 +46,6 @@
             cmbCategory.Name = "cmbCategory";
             cmbCategory.Size = new Size(284, 29);
             cmbCategory.TabIndex = 8;
-            cmbCategory.Text = "Fruits";
             cmbCategory.SelectedIndexChanged += cmbCategory_SelectedIndexChanged;
             // 
             // lblCategory
@@ -72,6 +72,7 @@
             // 
             cmbItem.Enabled = false;
             cmbItem.Font = new Font("Segoe UI", 12F);
+            cmbItem.DropDownStyle = ComboBoxStyle.DropDownList;
             cmbItem.FormattingEnabled = true;
             cmbItem.Location = new Point(12, 128);
             cmbItem.Name = "cmbItem";

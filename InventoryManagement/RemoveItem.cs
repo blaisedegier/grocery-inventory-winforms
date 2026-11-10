@@ -2,82 +2,49 @@
 {
     public partial class RemoveItem : Form
     {
-        // Attributes
-        private GroceryStore groceryStore;
+        private readonly GroceryStore groceryStore;
         private InventoryItem? item;
 
         public RemoveItem(GroceryStore groceryStore)
         {
             InitializeComponent();
             this.groceryStore = groceryStore;
+
+            // Selecting the first category raises SelectedIndexChanged, which fills the item list.
+            cmbCategory.SelectedIndex = 0;
         }
 
         private void cmbCategory_SelectedIndexChanged(object sender, EventArgs e)
         {
-            // Enable the item label and combo box
-            lblItem.Enabled = true;
-            cmbItem.Enabled = true;
-
-            // Convert the selected category to an enum
-            switch (cmbCategory.Text)
+            if (!Enum.TryParse(cmbCategory.Text, out Category category))
             {
-                case "Fruits":
-                    cmbItem.DataSource = groceryStore.Inventory.GetItems(Category.Fruits);
-                    break;
-                case "Vegetables":
-                    cmbItem.DataSource = groceryStore.Inventory.GetItems(Category.Vegetables);
-                    break;
-                case "Dairy":
-                    cmbItem.DataSource = groceryStore.Inventory.GetItems(Category.Dairy);
-                    break;
-                case "Meat":
-                    cmbItem.DataSource = groceryStore.Inventory.GetItems(Category.Meat);
-                    break;
-                case "Bakery":
-                    cmbItem.DataSource = groceryStore.Inventory.GetItems(Category.Bakery);
-                    break;
-                case "Beverages":
-                    cmbItem.DataSource = groceryStore.Inventory.GetItems(Category.Beverages);
-                    break;
-                case "Snacks":
-                    cmbItem.DataSource = groceryStore.Inventory.GetItems(Category.Snacks);
-                    break;
-                case "Household":
-                    cmbItem.DataSource = groceryStore.Inventory.GetItems(Category.Household);
-                    break;
+                return;
             }
 
-            // Set the display member
-            /*
-             * Code Attribution
-             * ComboBox.ValueMember and DisplayMember
-             * Visitor
-             * Stack Overflow
-             * 24 September 2014
-             * https://stackoverflow.com/questions/9521980/combobox-valuemember-and-displaymember
-             */
+            List<InventoryItem> items = groceryStore.Inventory.GetItems(category);
+            lblItem.Enabled = items.Count > 0;
+            cmbItem.Enabled = items.Count > 0;
+
+            // Adapted from https://stackoverflow.com/questions/9521980/combobox-valuemember-and-displaymember
+            cmbItem.DataSource = items;
             cmbItem.DisplayMember = "Name";
+
+            item = cmbItem.SelectedItem as InventoryItem;
+            btnRemove.Enabled = item != null;
         }
 
         private void cmbItem_SelectedIndexChanged(object sender, EventArgs e)
         {
-            // Enable the remove button
-            btnRemove.Enabled = true;
-
-            // Get the selected item
             item = cmbItem.SelectedItem as InventoryItem;
+            btnRemove.Enabled = item != null;
         }
 
         private void btnRemove_Click(object sender, EventArgs e)
         {
-            // Check if the item is not null
             if (item != null)
             {
-                // Remove the item from the inventory
                 groceryStore.Inventory.RemoveItem(item);
             }
-
-            // Close the form
             Close();
         }
     }

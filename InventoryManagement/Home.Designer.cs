@@ -60,6 +60,7 @@
             redtDisplay.Font = new Font("Arial", 16F);
             redtDisplay.Location = new Point(12, 12);
             redtDisplay.Name = "redtDisplay";
+            redtDisplay.ReadOnly = true;
             redtDisplay.Size = new Size(437, 378);
             redtDisplay.TabIndex = 2;
             redtDisplay.Text = "";
