@@ -36,7 +36,7 @@ an `ArgumentException` that the add form shows. Prices are `decimal`. The home f
 
 ## Running it
 
-Prerequisites: Windows and the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0).
+Prerequisites: Windows and the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0).
 
 ```bash
 git clone https://github.com/blaisedegier/grocery-inventory-winforms.git
@@ -50,7 +50,7 @@ by path. Visual Studio users can open `InventoryManagement/InventoryManagement.s
 
 ## Tech
 
-C# 12, .NET 8 (`net8.0-windows`), Windows Forms. No NuGet packages.
+C# 14, .NET 10 (`net10.0-windows`), Windows Forms. No NuGet packages.
 
 ## Known limitations
 
