@@ -1,13 +1,8 @@
 ﻿namespace InventoryManagement
 {
-    // GroceryStore class
-    // This class represents the grocery store as a whole.
+    // The store whose stock the forms work on. The home form creates one and passes it to the add and remove forms.
     public class GroceryStore
     {
-        // It has a property called Inventory that is an instance of the Inventory class.
-        public Inventory Inventory;
-
-        // Constructor
-        public GroceryStore() => Inventory = new Inventory();
+        public Inventory Inventory { get; } = new Inventory();
     }
 }
