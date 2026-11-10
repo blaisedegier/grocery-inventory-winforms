@@ -1,165 +1,62 @@
-# Inventory Management 📦
+# Grocery Inventory
 
-A Windows Forms desktop application for managing grocery store inventory, built with C# and .NET 8. Users can add and remove inventory items across multiple product categories, with all data displayed in a clean, categorized view.
+A Windows Forms stock list for a grocery store that groups items by category and flags low stock for restocking.
 
-## Table of Contents
+[![CI](https://github.com/blaisedegier/grocery-inventory-winforms/actions/workflows/ci.yml/badge.svg)](https://github.com/blaisedegier/grocery-inventory-winforms/actions/workflows/ci.yml)
 
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Prerequisites](#prerequisites)
-- [Getting Started](#getting-started)
-- [Usage](#usage)
-- [Project Structure](#project-structure)
-- [Architecture](#architecture)
-- [Categories](#categories)
-- [Input Validation](#input-validation)
+## What it does
 
-## Features
+- **Add Item** opens a form for a name, a price in rand, a quantity and a category. Invalid input (an empty name, a
+  price or quantity that is not a number, or a negative value) shows a message and keeps the form open; nothing is
+  added until the input is valid.
+- **Remove Item** opens a form where you pick a category and then one of its items. **Remove** is enabled only once
+  an item is selected.
+- The home screen lists the stock by category, names the most recently added item, and lists every item with a
+  quantity below 10 under **Restock**.
 
-- **Add items** to inventory with a name, price, quantity, and category
-- **Remove items** by selecting a category and then choosing from the items within it
-- **View inventory** in a formatted, categorized display with prices shown in South African Rand (R)
-- **Input validation** ensures item names are non-empty and prices/quantities are non-negative
-- **Error handling** with user-friendly message box alerts for invalid input
-- **History tracking** via an internal stack that records the order of items added
+Categories: Fruits, Vegetables, Dairy, Meat, Bakery, Beverages, Snacks, Household.
 
-## Tech Stack
+## How it works
 
-| Component    | Technology               |
-| ------------ | ------------------------ |
-| Language     | C# 12                    |
-| Framework    | .NET 8 (Windows)         |
-| UI Framework | Windows Forms (WinForms) |
-| IDE          | Visual Studio 2022       |
-| Build System | MSBuild / dotnet CLI     |
+`Inventory` keeps three collections, each doing one job:
 
-## Prerequisites
+| Collection                                  | Purpose                                                                 |
+| ------------------------------------------- | ----------------------------------------------------------------------- |
+| `Dictionary<Category, List<InventoryItem>>` | The stock itself, one list per category, created on first use.           |
+| `Stack<InventoryItem>`                      | Additions in order, so the most recent is on top.                        |
+| `Queue<InventoryItem>`                      | Items to restock, in the order they were found to be low, each once.     |
 
-- **Windows 10** or later
-- [.NET 8 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/8.0) (or later)
-- (Optional) [Visual Studio 2022](https://visualstudio.microsoft.com/) with the **.NET desktop development** workload
+`AddItem` files the item under its category, pushes it onto the history and calls `CheckRestock`, which enqueues it
+when its quantity is below the threshold. `RemoveItem` takes the item out of its category list and, because a
+stack or queue cannot remove from the middle, rebuilds both without it while keeping their order.
 
-## Getting Started
+Input checks are split in two: `InputValidator` holds the rules, and `ErrorHandler` turns the first failed rule into
+an `ArgumentException` that the add form shows. Prices are `decimal`. The home form refreshes its display from the
+`FormClosed` event of the add and remove forms.
 
-### Clone the repository
+## Running it
+
+Prerequisites: Windows and the [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0).
 
 ```bash
-git clone https://github.com/<your-username>/BasicInventoryManagement.git
-cd BasicInventoryManagement/InventoryManagement
+git clone https://github.com/blaisedegier/grocery-inventory-winforms.git
+cd grocery-inventory-winforms
+dotnet build InventoryManagement/InventoryManagement.sln -c Release
+dotnet run --project InventoryManagement/InventoryManagement.csproj
 ```
 
-### Build and run with the .NET CLI
+Run the commands from the repository root: the root holds no project file, so they name the solution and project
+by path. Visual Studio users can open `InventoryManagement/InventoryManagement.sln`.
 
-```bash
-dotnet build
-dotnet run
-```
+## Tech
 
-### Build and run with Visual Studio
+C# 12, .NET 8 (`net8.0-windows`), Windows Forms. No NuGet packages.
 
-1. Open `InventoryManagement.sln` in Visual Studio 2022.
-2. Press **F5** (or click **Start**) to build and launch the application.
+## Known limitations
 
-## Usage
-
-### Home Screen
-
-The main window displays the current inventory grouped by category. Two buttons provide access to the core functionality:
-
-- **Add Item** opens a dialog to enter a new inventory item.
-- **Remove Item** opens a dialog to select and delete an existing item.
-
-### Adding an Item
-
-1. Click **Add Item** on the home screen.
-2. Enter the item **Name**, **Price**, and **Quantity**.
-3. Select a **Category** from the dropdown.
-4. Click **Add** to save the item and return to the home screen.
-
-### Removing an Item
-
-1. Click **Remove Item** on the home screen.
-2. Select a **Category** from the first dropdown.
-3. The second dropdown populates with items in that category. Select the item to remove.
-4. Click **Remove** to delete it and return to the home screen.
-
-## Project Structure
-
-```text
-BasicInventoryManagement/
-└── InventoryManagement/
-    ├── InventoryManagement.sln        # Visual Studio solution file
-    ├── InventoryManagement.csproj     # .NET project file (net8.0-windows, WinForms)
-    ├── Program.cs                     # Application entry point
-    │
-    ├── Home.cs / .Designer.cs         # Main form: inventory display, navigation
-    ├── AddItem.cs / .Designer.cs      # Add item dialog form
-    ├── RemoveItem.cs / .Designer.cs   # Remove item dialog form
-    │
-    ├── GroceryStore.cs                # Grocery store wrapper holding an Inventory instance
-    ├── Inventory.cs                   # Core inventory logic (Dictionary, Stack, Queue)
-    ├── InventoryItem.cs               # Item model: Name, Price, Quantity, Category
-    ├── Category.cs                    # Enum of product categories
-    │
-    ├── InputValidator.cs              # Static validation methods for user input
-    └── ErrorHandler.cs                # Throws exceptions on invalid add-item input
-```
-
-## Architecture
-
-The application follows a simple layered structure:
-
-```text
-┌────────────────────────────────────────────┐
-│              UI Layer (WinForms)           │
-│   Home  ·  AddItem  ·  RemoveItem          │
-└──────────────────┬─────────────────────────┘
-                   │
-┌──────────────────▼─────────────────────────┐
-│            Business Logic Layer            │
-│   GroceryStore  ·  Inventory               │
-│   InputValidator  ·  ErrorHandler          │
-└──────────────────┬─────────────────────────┘
-                   │
-┌──────────────────▼─────────────────────────┐
-│              Data / Model Layer            │
-│   InventoryItem  ·  Category (enum)        │
-└────────────────────────────────────────────┘
-```
-
-### Data Structures Used
-
-| Structure                                   | Purpose                                                     |
-| ------------------------------------------- | ----------------------------------------------------------- |
-| `Dictionary<Category, List<InventoryItem>>` | Primary storage, mapping each category to its list of items |
-| `Stack<InventoryItem>`                      | Tracks the history of items as they are added               |
-| `Queue<InventoryItem>`                      | Designed for restock tracking when quantity drops below 10  |
-
-> **Note:** All data is stored in memory for the lifetime of the application. Closing the app will reset the inventory.
-
-## Categories
-
-The following product categories are available:
-
-| Category   | Description              |
-| ---------- | ------------------------ |
-| Fruits     | Fresh fruit products     |
-| Vegetables | Fresh vegetable products |
-| Dairy      | Milk, cheese, yogurt     |
-| Meat       | Beef, chicken, pork      |
-| Bakery     | Bread, pastries, cakes   |
-| Beverages  | Drinks and juices        |
-| Snacks     | Chips, candy, nuts       |
-| Household  | Cleaning and home items  |
-
-## Input Validation
-
-When adding an item, the following rules are enforced:
-
-| Field    | Rule                                   |
-| -------- | -------------------------------------- |
-| Name     | Must not be empty or null              |
-| Price    | Must be a valid number, zero or above  |
-| Quantity | Must be a valid integer, zero or above |
-
-If validation fails, an error message is shown in a dialog box describing the issue.
+- Stock is held in memory only and is lost when the window closes.
+- An item's quantity cannot be edited after it is added; to change it, remove the item and add it again.
+- The restock threshold (10) is a constant in `Inventory.cs`.
+- Item names are not required to be unique.
+- Windows only, as Windows Forms is.
+- No automated tests.
