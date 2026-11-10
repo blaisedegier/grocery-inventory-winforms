@@ -1,27 +1,22 @@
 ﻿namespace InventoryManagement
 {
-    // ErrorHandler class
-    // This class handles errors that occur during program execution.
-    // It implements methods to handle exceptions that occur when adding or removing items from the inventory.
+    // Turns a failed validation rule into an ArgumentException whose message names the bad value.
     class ErrorHandler
     {
-        // HandleAddError method
-        public static void HandleAddError(string name, double price, int quantity)
+        // Throws ArgumentException for the first of name, price or quantity that is not valid.
+        public static void HandleAddError(string name, decimal price, int quantity)
         {
-            // Check if the name is valid
             if (!InputValidator.isValidName(name))
             {
-                throw new ArgumentException("Invalid name: " + name);
+                throw new ArgumentException("Enter a name for the item.");
             }
-            // Check if the price is valid
             if (!InputValidator.isValidPrice(price))
             {
-                throw new ArgumentException("Invalid price: " + price);
+                throw new ArgumentException("Invalid price: " + price + ". The price cannot be negative.");
             }
-            // Check if the quantity is valid
             if (!InputValidator.isValidQuantity(quantity))
             {
-                throw new ArgumentException("Invalid quantity: " + quantity);
+                throw new ArgumentException("Invalid quantity: " + quantity + ". The quantity cannot be negative.");
             }
         }
     }

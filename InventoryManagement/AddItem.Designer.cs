@@ -127,6 +127,7 @@
             // 
             // cmbCategory
             // 
+            cmbCategory.DropDownStyle = ComboBoxStyle.DropDownList;
             cmbCategory.Font = new Font("Segoe UI", 12F);
             cmbCategory.FormattingEnabled = true;
             cmbCategory.Items.AddRange(new object[] { "Fruits", "Vegetables", "Dairy", "Meat", "Bakery", "Beverages", "Snacks", "Household" });
@@ -134,7 +135,6 @@
             cmbCategory.Name = "cmbCategory";
             cmbCategory.Size = new Size(284, 29);
             cmbCategory.TabIndex = 3;
-            cmbCategory.Text = "Fruits";
             // 
             // AddItem
             // 

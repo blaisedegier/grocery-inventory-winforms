@@ -1,79 +1,61 @@
-﻿namespace InventoryManagement
+﻿using System.Globalization;
+
+namespace InventoryManagement
 {
     public partial class AddItem : Form
     {
-        // Attributes
-        private GroceryStore groceryStore;
+        private readonly GroceryStore groceryStore;
 
         public AddItem(GroceryStore groceryStore)
         {
             InitializeComponent();
             this.groceryStore = groceryStore;
+            cmbCategory.SelectedIndex = 0;
         }
 
         private void butAdd_Click(object sender, EventArgs e)
         {
-            // Get the input values
-            string name = txtName.Text;
-            double price = double.Parse(txtPrice.Text);
-            int quantity = int.Parse(txtQuantity.Text);
-            Category category = Category.Fruits;
+            string name = txtName.Text.Trim();
 
-            // Convert the selected category to an enum
-            switch (cmbCategory.Text)
+            if (!TryParsePrice(txtPrice.Text, out decimal price))
             {
-                case "Fruits":
-                    category = Category.Fruits;
-                    break;
-                case "Vegetables":
-                    category = Category.Vegetables;
-                    break;
-                case "Dairy":
-                    category = Category.Dairy;
-                    break;
-                case "Meat":
-                    category = Category.Meat;
-                    break;
-                case "Bakery":
-                    category = Category.Bakery;
-                    break;
-                case "Beverages":
-                    category = Category.Beverages;
-                    break;
-                case "Snacks":
-                    category = Category.Snacks;
-                    break;
-                case "Household":
-                    category = Category.Household;
-                    break;
+                MessageBox.Show("Enter the price as a number, for example 12.50.", "Add Item");
+                txtPrice.Focus();
+                return;
             }
 
-            // Validate the input values
+            if (!int.TryParse(txtQuantity.Text, NumberStyles.Integer, CultureInfo.CurrentCulture, out int quantity))
+            {
+                MessageBox.Show("Enter the quantity as a whole number.", "Add Item");
+                txtQuantity.Focus();
+                return;
+            }
+
+            // Adapted from https://www.tutorialsteacher.com/articles/convert-string-to-enum-in-csharp
+            if (!Enum.TryParse(cmbCategory.Text, out Category category))
+            {
+                MessageBox.Show("Select a category.", "Add Item");
+                return;
+            }
+
             try
             {
                 ErrorHandler.HandleAddError(name, price, quantity);
             }
-            catch (Exception ex)
+            catch (ArgumentException ex)
             {
-                MessageBox.Show(ex.Message);
+                // Leave the form open so the input can be corrected; nothing is added.
+                MessageBox.Show(ex.Message, "Add Item");
+                return;
             }
 
-            // Create an InventoryItem object
-            /*
-             * Code Attribution:
-             * Convert String to Enum in C#
-             * TutorialsTeacher
-             * www.tutorialsteacher.com
-             * 17 August 2021
-             * https://www.tutorialsteacher.com/articles/convert-string-to-enum-in-csharp
-             */
-            InventoryItem item = new InventoryItem(name, price, quantity, category);
-
-            // Add the item to the inventory
-            groceryStore.Inventory.AddItem(item);
-
-            // Close the form
+            groceryStore.Inventory.AddItem(new InventoryItem(name, price, quantity, category));
             Close();
         }
+
+        // Accepts the current culture's decimal separator, and also a full stop when that culture uses a comma.
+        private static bool TryParsePrice(string text, out decimal price) =>
+            decimal.TryParse(text, NumberStyles.Number, CultureInfo.CurrentCulture, out price)
+            || decimal.TryParse(text, NumberStyles.Number, CultureInfo.InvariantCulture, out price);
     }
 }
